@@ -6,7 +6,7 @@
 - [Renderer](#2.-Renderer)
 - [Plane](#3.-Plane)
 - [Objects](#4.-Objects)
-  - [Type of object: Mesh](#Type-of-object:-Mesh)
+  - [Type of object Mesh](#Type-of-object:-Mesh)
   - [How to Create a Mesh](#How-to-Create-a-Mesh)
   - [Functions and attributes for meshes](#Functions-and-attributes-for-meshes)
 - [light](#5.-light)
