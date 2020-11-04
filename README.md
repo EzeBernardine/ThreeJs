@@ -21,7 +21,7 @@
 - [Geometry](#8.-Geometry)
   - [Requirements for creating a threejs project](#Requirements-for-creating-a-threejs-project)
 - [NOTES](#NOTES)
-  <!-- ## **Threejs Componenets** -->
+
 
 ## 1. **Scene**
 
