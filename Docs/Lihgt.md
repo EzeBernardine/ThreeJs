@@ -35,7 +35,7 @@ scene.add(ambientLiht);
 ### How to connect `THREE.AmbientLight` to the GUI Controls menu
 
 ```javascript
-let ambientLight = customeAmbientLight();
+let ambientLight = THREE.ambientLight();
 let gui = new dat.GUI();
 let control = new (function () {
   this.ambientColor = ambientLight.color.getStyle();

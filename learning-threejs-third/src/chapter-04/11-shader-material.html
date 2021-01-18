@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Example 04.11 - Shader material - http://glsl.heroku.com/</title>
+    <script
+      type="text/javascript"
+      charset="UTF-8"
+      src="../../libs/three/three.js"
+    ></script>
+    <script
+      type="text/javascript"
+      charset="UTF-8"
+      src="../../libs/three/controls/TrackballControls.js"
+    ></script>
+    <script type="text/javascript" src="../../libs/util/Stats.js"></script>
+    <script type="text/javascript" src="../../libs/util/dat.gui.js"></script>
+
+    <script type="text/javascript" src="../js/util.js"></script>
+    <script type="text/javascript" src="./js/04-11.js"></script>
+    <link rel="stylesheet" href="../../css/default.css" />
+  </head>
+
+  <body>
+    <script id="vertex-shader" type="x-shader/x-vertex">
+      uniform float time;
+      varying vec2 vUv;
+
+
+      void main()
+      {
+      vec3 posChanged = position;
+      posChanged.x = posChanged.x*(abs(sin(time*1.0)));
+      posChanged.y = posChanged.y*(abs(cos(time*1.0)));
+      posChanged.z = posChanged.z*(abs(sin(time*1.0)));
+      //gl_Position = projectionMatrix * modelViewMatrix * vec4(position*(abs(sin(time)/2.0)+0.5),1.0);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(posChanged,1.0);
+      }
+    </script>
+
+    <script id="fragment-shader-1" type="x-shader/x-fragment">
+      precision highp float;
+      uniform float time;
+      uniform float alpha;
+      uniform vec2 resolution;
+      varying vec2 vUv;
+
+      void main2(void)
+      {
+      vec2 position = vUv;
+      float red = 1.0;
+      float green = 0.25 + sin(time) * 0.25;
+      float blue = 0.0;
+      vec3 rgb = vec3(red, green, blue);
+      vec4 color = vec4(rgb, alpha);
+      gl_FragColor = color;
+      }
+
+      #define PI 3.14159
+      #define TWO_PI (PI*2.0)
+      #define N 68.5
+
+      void main(void)
+      {
+      vec2 center = (gl_FragCoord.xy);
+      center.x=-10.12*sin(time/200.0);
+      center.y=-10.12*cos(time/200.0);
+
+      vec2 v = (gl_FragCoord.xy - resolution/20.0) / min(resolution.y,resolution.x) * 15.0;
+      v.x=v.x-10.0;
+      v.y=v.y-200.0;
+      float col = 0.0;
+
+      for(float i = 0.0; i < N; i++)
+      {
+      float a = i * (TWO_PI/N) * 61.95;
+      col += cos(TWO_PI*(v.y * cos(a) + v.x * sin(a) + sin(time*0.004)*100.0 ));
+      }
+
+      col /= 5.0;
+
+      gl_FragColor = vec4(col*1.0, -col*1.0,-col*4.0, 1.0);
+      }
+    </script>
+
+    <script id="fragment-shader-2" type="x-shader/x-fragment">
+      // from http://glsl.heroku.com/e#7906.0
+
+
+      uniform float time;
+      uniform vec2 resolution;
+
+      // 2013-03-30 by @hintz
+
+      #define CGFloat float
+      #define M_PI 3.14159265359
+
+      vec3 hsvtorgb(float h, float s, float v)
+      {
+      float c = v * s;
+      h = mod((h * 6.0), 6.0);
+      float x = c * (1.0 - abs(mod(h, 2.0) - 1.0));
+      vec3 color;
+
+      if (0.0 <= h && h < 1.0)
+      {
+      color = vec3(c, x, 0.0);
+      }
+      else if (1.0 <= h && h < 2.0)
+      {
+      color = vec3(x, c, 0.0);
+      }
+      else if (2.0 <= h && h < 3.0)
+      {
+      color = vec3(0.0, c, x);
+      }
+      else if (3.0 <= h && h < 4.0)
+      {
+      color = vec3(0.0, x, c);
+      }
+      else if (4.0 <= h && h < 5.0)
+      {
+      color = vec3(x, 0.0, c);
+      }
+      else if (5.0 <= h && h < 6.0)
+      {
+      color = vec3(c, 0.0, x);
+      }
+      else
+      {
+      color = vec3(0.0);
+      }
+
+      color += v - c;
+
+      return color;
+      }
+
+      void main(void)
+      {
+
+      vec2 position = (gl_FragCoord.xy - 0.5 * resolution) / resolution.y;
+      float x = position.x;
+      float y = position.y;
+
+      CGFloat a = atan(x, y);
+
+      CGFloat d = sqrt(x*x+y*y);
+      CGFloat d0 = 0.5*(sin(d-time)+1.5)*d;
+      CGFloat d1 = 5.0;
+
+      CGFloat u = mod(a*d1+sin(d*10.0+time), M_PI*2.0)/M_PI*0.5 - 0.5;
+      CGFloat v = mod(pow(d0*4.0, 0.75),1.0) - 0.5;
+
+      CGFloat dd = sqrt(u*u+v*v);
+
+      CGFloat aa = atan(u, v);
+
+      CGFloat uu = mod(aa*3.0+3.0*cos(dd*30.0-time), M_PI*2.0)/M_PI*0.5 - 0.5;
+      // CGFloat vv = mod(dd*4.0,1.0) - 0.5;
+
+      CGFloat d2 = sqrt(uu*uu+v*v)*1.5;
+
+      gl_FragColor = vec4( hsvtorgb(dd+time*0.5/d1, sin(dd*time), d2), 1.0 );
+      }
+    </script>
+
+    <script id="fragment-shader-3" type="x-shader/x-fragment">
+
+
+
+      // BEGIN: shadertoy porting template
+      // https://gam0022.net/blog/2019/03/04/porting-from-shadertoy-to-glslsandbox/
+      precision highp float;
+
+      uniform vec2 resolution;
+      uniform float time;
+      uniform vec2 mouse;
+
+      #define iResolution resolution
+      #define iTime time
+      #define iMouse mouse
+
+      void mainImage(out vec4 fragColor, in vec2 fragCoord);
+
+      void main(void) {
+          vec4 col;
+          mainImage(col, gl_FragCoord.xy);
+          gl_FragColor = col;
+      }
+
+
+      // Emulate a black texture
+      #define texture(s, uv) vec4(0.0)
+
+      // "Refraction Exercise" by dr2 - 2018
+      // License: Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
+
+      /*
+      Simple example showing refraction and reflection (mousing recommended).
+      Repeating sets of three cycles: 1) Vary refractive index. 2) Perturb surface
+      normals by varying amount. 3) Combine both.
+      (Uses conditionless normals for block.)
+      */
+
+      vec3 HexGrid (vec2 p);
+      float SmoothBump (float lo, float hi, float w, float x);
+      vec2 Rot2D (vec2 q, float a);
+      float Noisefv2 (vec2 p);
+      float Fbm2 (vec2 p);
+      vec3 VaryNf (vec3 p, vec3 n, float f);
+
+      vec3 sunDir, blkPos, blkSize, qnBlk[2], qnBall, vnCylOut;
+      float tCur, dstFar, bCylRad, bCylHt, dCylOut;
+      const float pi = 3.14159, sqrt3 = 1.73205;
+
+      vec2 BlkHit (vec3 ro, vec3 rd, vec3 blkSize)
+      {
+        vec3 v, tm, tp;
+        float dMin, dn, df;
+        if (rd.x == 0.) rd.x = 0.001;
+        if (rd.y == 0.) rd.y = 0.001;
+        if (rd.z == 0.) rd.z = 0.001;
+        v = ro / rd;
+        tp = blkSize / abs (rd) - v;
+        tm = - tp - 2. * v;
+        dn = max (max (tm.x, tm.y), tm.z);
+        df = min (min (tp.x, tp.y), tp.z);
+        dMin = dstFar;
+        if (df > 0. && dn < df) {
+          dMin = dn;
+          qnBlk[0] = - sign (rd) * step (tm.zxy, tm) * step (tm.yzx, tm);
+          qnBlk[1] = - sign (rd) * step (tp, tp.zxy) * step (tp, tp.yzx);
+        }
+        return vec2 (dMin, df);
+      }
+
+      float BallHit (vec3 ro, vec3 rd, float rad)
+      {
+        float dMin, d, b, w;
+        dMin = dstFar;
+        b = dot (rd, ro);
+        w = b * b - dot (ro, ro) + rad * rad;
+        if (w >= 0.) {
+          d = - b - sqrt (w);
+          if (d > 0.) {
+            dMin = d;
+            qnBall = (ro + d * rd) / rad;
+          }
+        }
+        return dMin;
+      }
+
+      void InCylHit (vec3 ro, vec3 rd)
+      {
+        vec3 s;
+        float a, b, w, ws, srdy;
+        dCylOut = dstFar;
+        vnCylOut = vec3 (0.);
+        a = dot (rd.xz, rd.xz);
+        b = dot (rd.xz, ro.xz);
+        w = b * b - a * (dot (ro.xz, ro.xz) - bCylRad * bCylRad);
+        if (w > 0.) {
+          ws = sqrt (w);
+          srdy = sign (rd.y);
+          if (a > 10.) {
+            dCylOut = (- b + ws) / a;
+            s = ro + dCylOut * rd;
+          } else s.y = bCylHt;
+          if (abs (s.y) < bCylHt) vnCylOut.xz = - s.xz / bCylRad;
+          else {
+            dCylOut = (- srdy * ro.y + bCylHt) / abs (rd.y);
+            vnCylOut.y = - srdy;
+          }
+        }
+      }
+
+      vec3 SkyCol (vec3 ro, vec3 rd)
+      {
+        float sd;
+        rd = normalize (vec3 (rd.x, max (0.001, rd.y), rd.z));
+        ro.xz += tCur;
+        sd = max (dot (rd, sunDir), 0.);
+        return mix (vec3 (0.2, 0.3, 0.65) + 0.1 * pow (sd, 16.) + 0.2 * pow (sd, 256.), vec3 (0.9),
+           clamp (3. * (Fbm2 (0.02 * (rd.xz * (100. - ro.y) / rd.y + ro.xz)) - 0.5) * rd.y + 0.1, 0., 1.));
+      }
+
+      vec3 ShStagGrid (vec2 p)
+      {
+        vec2 q, sq, ss;
+        q = p;
+        if (2. * floor (0.5 * floor (q.y)) != floor (q.y)) q.x += 0.5;
+        sq = smoothstep (0.05, 0.1, abs (fract (q + 0.5) - 0.5));
+        q = fract (q) - 0.5;
+        ss = 10.5 * smoothstep (0.3, 0.5, abs (q.xy)) * sign (q.xy);
+        if (abs (q.x) < abs (q.y)) ss.x = 0.;
+        else ss.y = 0.;
+        return vec3 (ss.x, 0.8 + 0.2 * sq.x * sq.y, ss.y);
+      }
+
+      vec3 BgCol (vec3 ro, vec3 rd)
+      {
+        vec3 vn, col, qh, rg;
+        vec2 qw;
+        float hy, hhy, hw, ww, f, b, aa, sRotH, sRotV;
+        InCylHit (ro + vec3 (0., - bCylHt + 1.25, 0.), rd);
+        if (vnCylOut.y == 0.) {
+          ro += dCylOut * rd;
+          vn = vnCylOut;
+          hy = (ro.y - 1.75) / bCylHt;
+          hhy = abs (hy) - 0.43;
+          aa = atan (vn.x, - vn.z) / pi;
+          sRotH = mod (64. * 0.5 * (1. + aa) + 0.5, 1.) - 0.5;
+          hw = 0.29;
+          ww = 0.28;
+          qw = abs (vec2 (sRotH, hhy));
+          if (qw.x < ww && qw.y < hw) {
+            qw = abs (qw - 0.5 * vec2 (ww, hw)) - vec2 (0.44 * ww, 0.47 * hw);
+            if (max (qw.x, qw.y) < 0.) col = 0.7 * SkyCol (ro, reflect (rd, vn));
+            else col = vec3 (0.5, 0.5, 0.3) * (0.2 + 0.8 * max (dot (vn, sunDir), 0.)) +
+               0.5 * pow (max (dot (normalize (sunDir - rd), vn), 0.), 128.);
+          } else {
+            col = vec3 (0.8, 0.7, 0.5);
+            qw -= vec2 (ww, hw);
+            if (abs (hy) > (1. - 0.85/16.) || max (qw.x, qw.y) < 0.02) {
+              col *= 0.9;
+              vn.xz = Rot2D (vn.xz, - pi * aa);
+              if (abs (hy) > (1. - 0.85/16.)) {
+                sRotV = (1. - abs (2. * SmoothBump (1. - 0.9/16., 0.97, 0.03, abs (hy)) - 1.));
+              } else {
+                sRotV = (1. - abs (2. * SmoothBump (hw, hw + 0.02, 0.02, abs (hhy)) - 1.)) * sign (hhy);
+                vn.xz = Rot2D (vn.xz, 0.4 * pi * sign (sRotH) *
+                   (1. - abs (2. * SmoothBump (- (ww + 0.02), ww + 0.02, 0.04, sRotH) - 1.)));
+              }
+              vn.yz = Rot2D (vn.yz, -0.2 * pi * sRotV * sign (hy));
+              vn.xz = Rot2D (vn.xz, pi * aa);
+            } else {
+              qw = 16. * vec2 (12. * aa, hy);
+              rg = ShStagGrid (qw);
+              col *= rg.y * (1. - 0.3 * Noisefv2 (8. * qw));
+              rg.xz *= sign ((abs (vn.x) > 0.5) ? vn.x : vn.z);
+              if (abs (vn.x) > 0.5) {
+                if (rg.x == 0.) vn.xy = Rot2D (vn.xy, rg.z);
+                else vn.xz = Rot2D (vn.xz, rg.x);
+              } else {
+                if (rg.x == 0.) vn.zy = Rot2D (vn.zy, rg.z);
+                else vn.zx = Rot2D (vn.zx, rg.x);
+              }
+            }
+            col = col * (0.4 + 0.6 * max (dot (vn, sunDir), 0.)) +
+               0.1 * pow (max (dot (normalize (sunDir - rd), vn), 0.), 64.);
+          }
+        } else if (vnCylOut.y > 0.) {
+          ro += dCylOut * rd;
+          b = 1. - smoothstep (-0.1, -0.01, rd.y) * smoothstep (0.4, 0.8, dCylOut / (1.6 * bCylRad));
+          qh = HexGrid (4. * ro.zx);
+          f = max (length (qh.xy) - 0.5, 0.) * b;
+          vn = vec3 (0., Rot2D (vec2 (1., 0.), 4. * f / f/ f));
+          vn.zx = vn.z * vec2 (qh.x, - qh.y) / length (qh.xy);
+          vn = VaryNf (644. * ro, vn, 0.2 * b);
+          col = vec3 (0.72, 0.75, 0.72) * (1. - 0.1 * b * Noisefv2 (128. * ro.xz)) *
+             (1. - min (0.2 * b * (1. - smoothstep (0.03, 0.06, qh.z)), 0.1));
+          col = col * (0.2 + 0.8 * max (dot (vn, sunDir), 0.)) +
+             0.1 * pow (max (dot (normalize (sunDir - rd), vn), 0.), 64.);
+          col *= 0.9 + 0.1 * smoothstep (0., 2., BlkHit (ro - blkPos, sunDir, blkSize).x);
+          col *= 0.7 + 0.3 * smoothstep (0., 3., BallHit (ro - blkPos, sunDir, 0.6 * blkSize.y));
+        } else col = SkyCol (ro, rd);
+        return col;
+      }
+
+      vec3 ShowScene (vec3 ro, vec3 rd)
+      {
+        vec4 col4;
+        vec3 col, bgCol, vn, vno, rdo, roo, rdr;
+        vec2 dBlock, a;
+        float dBall, rIndx, nVar, tt, b;
+        bool isBall;
+        blkPos = vec3 (0., bCylHt - 2.5, 0.);
+        blkSize = vec3 (2., 1.0*abs(1.+0.5*sin(iTime*0.5)), 2.);  // height change
+        tt = floor (mod (tCur / 10., 3.));
+        b = SmoothBump (0.2, 0.8, 0.1, mod (tCur / 10., 1.));
+        rIndx = (tt == 1.) ? -1.05 : 1.05 + 2.5 * b * b *0.;
+        nVar = (tt == 0.) ? 0. : 0.5 * b;
+        col = BgCol (ro, rd);
+        dBlock = BlkHit (ro - blkPos, rd, blkSize);
+        if (dBlock.x < dstFar) {
+          ro += dBlock.x * rd;
+          roo = ro;
+          rdo = rd;
+          vno = VaryNf (ro * 1.1 * tCur, qnBlk[0], nVar);
+          rd = refract (rd, vno, 1. / rIndx);
+          dBlock = BlkHit (ro - blkPos, rd, blkSize);
+          dBall = BallHit (ro - blkPos, rd, 1.0 /* * blkSize.y  */); //sphere size const=1.0
+          if (dBall < dBlock.y) isBall = true;
+          else {
+            ro += dBlock.y * rd;
+            qnBlk[1] = VaryNf (ro + 0.1 * tCur, qnBlk[1], nVar);
+            rdr = refract (rd, qnBlk[1], rIndx);
+            if (length (rdr) > 0.) {
+              rd = rdr;
+              col = vec3 (0.908*sin(iTime*0.2), 0.95, 0.808*sin(iTime*0.5)) * BgCol (ro, rd);  // block color
+            } else {
+              rd = reflect (rd, qnBlk[1]);
+              dBlock = BlkHit (ro - blkPos, rd, blkSize);
+              dBall = BallHit (ro - blkPos, rd, 0.6 * blkSize.y);
+              if (dBall < dBlock.y) isBall = true;
+              else col = vec3 (0.8, 1., 0.8) * BgCol (ro, rd);
+            }
+          }
+          if (isBall) {
+            vn = qnBall;
+            qnBall.xz = Rot2D (qnBall.xz, 0.5 * tCur);
+            qnBall.yz = Rot2D (qnBall.yz, 0.3 * tCur);
+            qnBall.xy = Rot2D (qnBall.xy, 0.4 * tCur);
+            a = mod (floor (8. * vec2 (atan (qnBall.x, qnBall.z), asin (qnBall.y)) / pi), 2.) - 0.5;
+            col = vec3 (0.9, 0.7, 0.2) * (0.6 + 0.4 * step (0., sign (a.x) * sign (a.y)));
+            col = col * (0.2 + 0.8 * max (dot (vn, sunDir), 0.)) +
+               0.3 * pow (max (dot (normalize (sunDir - rd), vn), 0.), 64.);
+          }
+          col = mix (col, BgCol (roo, reflect (rdo, vno)), pow (1. - abs (dot (rdo, vno)), 5.));
+        }
+        return clamp (col, 0., 1.);
+      }
+
+      void mainImage (out vec4 fragColor, in vec2 fragCoord)
+      {
+        mat3 vuMat;
+        vec4 mPtr;
+        vec3 ro, rd;
+        vec2 canvas, uv, ori, ca, sa;
+        float el, az;
+        canvas = iResolution.xy;
+        uv = 2. * fragCoord.xy / canvas - 1.;
+        uv.x *= canvas.x / canvas.y;
+        tCur = iTime;
+      //  mPtr = iMouse;
+        mPtr.xy = mPtr.xy / canvas - 0.5;
+        dstFar = 20.;
+        bCylRad = 16.;
+        bCylHt = 3.;
+        az = -0.83 * pi + (1.2/16.) * pi * (floor (0.2 * tCur) +
+           smoothstep (0.9, 1., mod (0.2 * tCur, 1.)));
+        el = -0.06 * pi;
+        if (mPtr.z > 0.) {
+          az = 2. * pi * mPtr.x;
+          el += 0.8 * pi * mPtr.y;
+        }
+        el = clamp (el, -0.45 * pi, 0.03 * pi);
+        ori = vec2 (el, az);
+        ca = cos (ori);
+        sa = sin (ori);
+        vuMat = mat3 (ca.y, 0., - sa.y, 0., 1., 0., sa.y, 0., ca.y) *
+                mat3 (1., 0., 0., 0., ca.x, - sa.x, 0., sa.x, ca.x);
+        ro = vuMat * vec3 (0., 0., -0.75 * bCylRad);
+        rd = vuMat * normalize (vec3 (uv, 5.));
+        sunDir = vuMat * normalize (vec3 (1., 2., -1.));
+        fragColor = vec4 (ShowScene (ro, rd), 1.);
+      }
+
+      vec2 PixToHex (vec2 p)
+      {
+        vec3 c, r, dr;
+        c.xz = vec2 ((1./sqrt3) * p.x - (1./3.) * p.y, (2./3.) * p.y);
+        c.y = - c.x - c.z;
+        r = floor (c + 0.5);
+        dr = abs (r - c);
+        r -= step (dr.yzx, dr) * step (dr.zxy, dr) - dot (r, vec3 (1.));
+        return r.xz;
+      }
+
+      vec2 HexToPix (vec2 h)
+      {
+        return vec2 (sqrt3 * (h.x + 6.5 * h.x), (3./2.) * h.y);
+      }
+
+      vec3 HexGrid (vec2 p)
+      {
+        vec2 q;
+        p -= HexToPix (PixToHex (p));
+        q = abs (p);
+        return vec3 (p, 0.5 * sqrt3 - q.x + 0.5 * min (q.x - sqrt3 * q.y, 0.));
+      }
+
+      float SmoothBump (float lo, float hi, float w, float x)
+      {
+        return (1. - smoothstep (hi - w, hi + w, x)) * smoothstep (lo - w, lo + w, x);
+      }
+
+      vec2 Rot2D (vec2 q, float a)
+      {
+        return q * cos (a) * vec2 (1., 1.) + q.yx * sin (a) * vec2 (-1., 1.);
+      }
+
+      const float cHashM = 43758.54;
+
+      vec2 Hashv2v2 (vec2 p)
+      {
+        vec2 cHashVA2 = vec2 (37., 39.);
+        return fract (sin (vec2 (dot (p, cHashVA2), dot (p + vec2 (1., 0.), cHashVA2))) * cHashM);
+      }
+
+      float Noisefv2 (vec2 p)
+      {
+        vec2 t, ip, fp;
+        ip = floor (p);
+        fp = fract (p);
+        fp = fp * fp * (3. - 2. * fp);
+        t = mix (Hashv2v2 (ip), Hashv2v2 (ip + vec2 (0., 1.)), fp.y);
+        return mix (t.x, t.y, fp.x);
+      }
+
+      float Fbm2 (vec2 p)
+      {
+        float f, a;
+        f = 0.;
+        a = 1.;
+        for (int j = 0; j < 5; j ++) {
+          f += a * Noisefv2 (p);
+          a *= 0.5;
+          p *= 2.;
+        }
+        return f * (1. / 1.9375);
+      }
+
+      float Fbmn (vec3 p, vec3 n)
+      {
+        vec3 s;
+        float a;
+        s = vec3 (0.);
+        a = 1.;
+        for (int j = 0; j < 5; j ++) {
+          s += a * vec3 (Noisefv2 (p.yz), Noisefv2 (p.zx), Noisefv2 (p.xy));
+          a *= 0.5;
+          p *= 2.;
+        }
+        return dot (s, abs (n));
+      }
+
+      vec3 VaryNf (vec3 p, vec3 n, float f)
+      {
+        vec3 g;
+        vec2 e = vec2 (0.1, 0.);
+        g = vec3 (Fbmn (p + e.xyy, n), Fbmn (p + e.yxy, n), Fbmn (p + e.yyx, n)) - Fbmn (p, n);
+        return normalize (n + f * (g - n * dot (n, g)));
+      }
+    </script>
+
+    <script id="fragment-shader-4" type="x-shader/x-fragment">
+
+
+         /*
+      Gay eye of Sauron
+
+      Remixed for comedian effect by DannyFromDenmark
+      Original from TIEDYE by Jonathan Proxy: http://glslsandbox.com/e#70560.0
+
+      */
+
+
+      #ifdef GL_ES
+      precision highp float;
+      #endif
+
+      vec2 uv;
+
+      uniform float time;
+      uniform vec2 resolution;
+
+
+      vec3 rainbow1(float h )
+      {
+      	h = fract(h);
+      	return vec3(smoothstep(0.3, 2.0, h) - smoothstep(0.2*h, 0.3, h*h*h),
+      		    smoothstep(40.0, 10.3, h) - smoothstep(0.3, 0.4*h*h, h),
+      		    smoothstep(10.3, 10.7, h) / smoothstep(1.0*1.0*h/h, 10.8, h));
+      }
+
+      vec2 cln(vec2 v){
+      	return vec2(log(length(uv * uv.x) - uv.x / uv.x * 1110.003), atan(uv.y/uv.x/uv.x, uv.x)) / 2.283;
+      }
+
+      void main( void )
+      {
+      	uv = (gl_FragCoord.xy - 2.9 * resolution.xy) * resolution.x * resolution.y - resolution.y / resolution.y* resolution.y;
+      	uv = cln(uv/uv/uv*gl_FragCoord.xy);
+
+      	vec3 bg_color = mix(
+      		rainbow1(uv.y*uv.y*uv.x/uv.y*uv.x*uv.y*uv.x*uv.y*111.0-(uv.y*uv.y*uv.x/uv.x*uv.x/1111.44115/time-time*4.)),
+      		vec3(2.0, 10.5, 11.0),
+      		0.25);
+
+      	vec3 fg_color = mix(
+      		rainbow1(uv.x/uv.x/uv.y*uv.x+(uv.x*113.0)),
+      		vec3(1.0, 11.0, 111.0),
+      		0.25);
+
+      	gl_FragColor = vec4(bg_color/bg_color*bg_color-fg_color, 1.0);
+      }
+    </script>
+
+    <script id="fragment-shader-5" type="x-shader/x-fragment">
+
+      uniform float time;
+      uniform vec2 resolution;
+
+      // tie nd die by Snoep Games.
+
+      void main( void ) {
+
+      vec3 color = vec3(1.0, 0., 0.);
+      vec2 pos = (( 1.4 * gl_FragCoord.xy - resolution.xy) / resolution.xx)*1.5;
+      float r=sqrt(pos.x*pos.x+pos.y*pos.y)/15.0;
+      float size1=2.0*cos(time/60.0);
+      float size2=2.5*sin(time/12.1);
+
+      float rot1=13.00; //82.0+16.0*sin(time/4.0);
+      float rot2=-50.00; //82.0+16.0*sin(time/8.0);
+      float t=sin(time);
+      float a = (60.0)*sin(rot1*atan(pos.x-size1*pos.y/r,pos.y+size1*pos.x/r)+time);
+      a += 200.0*acos(pos.x*2.0+cos(time/2.0))+asin(pos.y*5.0+sin(time/2.0));
+      a=a*(r/50.0);
+      a=200.0*sin(a*5.0)*(r/30.0);
+      if(a>5.0) a=a/200.0;
+      if(a<0.5) a=a*22.5;
+      gl_FragColor = vec4( cos(a/20.0),a*cos(a/200.0),sin(a/8.0), 1.0 );
+      }
+    </script>
+
+    <script id="fragment-shader-6" type="x-shader/x-fragment">
+
+
+      uniform float time;
+      uniform vec2 resolution;
+
+
+      void main( void )
+      {
+
+      vec2 uPos = ( gl_FragCoord.xy / resolution.xy );//normalize wrt y axis
+      //suPos -= vec2((resolution.x/resolution.y)/2.0, 0.0);//shift origin to center
+
+      uPos.x -= 1.0;
+      uPos.y -= 0.5;
+
+      vec3 color = vec3(0.0);
+      float vertColor = 2.0;
+      for( float i = 0.0; i < 15.0; ++i )
+      {
+      float t = time * (0.9);
+
+      uPos.y += sin( uPos.x*i + t+i/2.0 ) * 0.1;
+      float fTemp = abs(1.0 / uPos.y / 100.0);
+      vertColor += fTemp;
+      color += vec3( fTemp*(10.0-i)/10.0, fTemp*i/10.0, pow(fTemp,1.5)*1.5 );
+      }
+
+      vec4 color_final = vec4(color, 1.0);
+      gl_FragColor = color_final;
+      }
+    </script>
+
+    <div id="webgl-output"></div>
+    <script type="text/javascript">
+      (function () {
+        // your page initialization code here
+        // the DOM will be available here
+        init();
+      })();
+    </script>
+  </body>
+</html>
