@@ -296,3 +296,13 @@ Three.js provides two different materials you can use on a THREE.Line geometry, 
 | linecap      | This property defines how the ends of lines look in the wireframe mode. The possible values are butt, round, and square. The default is round. In practice, the results from changing this property are very difficult to see. This property isn't supported on WebGLRenderer.            |
 | linejoin     | Defines how the line joints are visualized. The possible values are round, bevel, and miter. The default value is round. If you look very closely, you can see this in the example using low opacity and a very large wireframeLinewidth. This property isn't supported on WebGLRenderer. |
 | vertexColors | You can supply a specific color for each vertex by setting this property to the THREE.VertexColors value.                                                                                                                                                                                 |
+
+### `THREE.LineDashedMaterial`
+
+This material has the same properties as THREE.LineBasicMaterial and two additional ones you can use to define the dash width and the width of the gaps between the dashes, which are as follows:
+
+| Name     | Description                                                                                                                                                          |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| scale    | This scales dashSize and gapSize. If the scale is smaller than 1, dashSize, and gapSize increase, and if the scale is larger than 1, dashSize, and gapSize decrease. |
+| dashSize | This is the size of the dash.                                                                                                                                        |
+| gapSize  | This is the size of the gap.                                                                                                                                         |
