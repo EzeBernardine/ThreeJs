@@ -119,9 +119,9 @@ function init() {
   
   function render() {
     stats.update();
-    controls.mesh.rotation.y = step+=0.005
-    controls.mesh.rotation.x = step
-    controls.mesh.rotation.z = step
+    // controls.mesh.rotation.y = step+=0.005
+    // controls.mesh.rotation.x = step
+    // controls.mesh.rotation.z = step
 
     // render using requestAnimationFrame
     requestAnimationFrame(render);

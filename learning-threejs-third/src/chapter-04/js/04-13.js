@@ -35,7 +35,7 @@ function init() {
   lines.colors = colors;
   var material = new THREE.LineDashedMaterial({
     vertexColors: true,
-    color: 0xffffff,
+    color: 'green',
     dashSize: 2,
     gapSize: 2,
     scale: 0.1

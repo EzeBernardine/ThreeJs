@@ -1,5 +1,4 @@
 function init() {
-
   // use the defaults
   var stats = initStats();
   var renderer = initRenderer();
@@ -23,7 +22,6 @@ function init() {
   // get the turtle
   var points = gosper(4, 60);
 
-
   var lines = new THREE.Geometry();
   var colors = [];
   var i = 0;
@@ -38,7 +36,7 @@ function init() {
   var material = new THREE.LineBasicMaterial({
     opacity: 1.0,
     linewidth: 1,
-    vertexColors: THREE.VertexColors
+    vertexColors: THREE.VertexColors,
   });
 
   var line = new THREE.Line(lines, material);
@@ -58,13 +56,11 @@ function init() {
   }
 
   function gosper(a, b) {
-
     var turtle = [0, 0, 0];
     var points = [];
     var count = 0;
 
     rg(a, b, turtle);
-
 
     return points;
 
@@ -81,7 +77,7 @@ function init() {
       points.push({
         x: turtle[0],
         y: turtle[1],
-        z: Math.sin(count) * 5
+        z: Math.sin(count) * 5,
       });
       //                ctx.moveTo(turtle[0], turtle[1]);
 
@@ -92,15 +88,13 @@ function init() {
       points.push({
         x: turtle[0],
         y: turtle[1],
-        z: Math.sin(count) * 5
+        z: Math.sin(count) * 5,
       });
       //                ctx.lineTo(turtle[0], turtle[1]);
       //                ctx.stroke();
-
     }
 
     function rg(st, ln, turtle) {
-
       st--;
       ln = ln / 2.6457;
       if (st > 0) {
@@ -132,7 +126,7 @@ function init() {
         fd(ln);
         lt(60);
         fd(ln);
-        rt(60)
+        rt(60);
       }
     }
 
@@ -172,5 +166,4 @@ function init() {
       }
     }
   }
-
 }
